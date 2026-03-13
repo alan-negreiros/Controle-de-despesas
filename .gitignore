@@ -1,119 +1,214 @@
-# Miscellaneous
-*.class
-*.lock
-*.log
-*.pyc
-*.swp
-.buildlog/
-.history
+import 'package:flutter/material.dart';
 
+void main() {
+  runApp(DespesasApp());
+}
 
+class DespesasApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Despesas Pessoais',
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+      ),
+      home: HomePage(),
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}
 
-# Flutter repo-specific
-/bin/cache/
-/bin/internal/bootstrap.bat
-/bin/internal/bootstrap.sh
-/bin/mingit/
-/dev/benchmarks/mega_gallery/
-/dev/bots/.recipe_deps
-/dev/bots/android_tools/
-/dev/devicelab/ABresults*.json
-/dev/docs/doc/
-/dev/docs/flutter.docs.zip
-/dev/docs/lib/
-/dev/docs/pubspec.yaml
-/dev/integration_tests/**/xcuserdata
-/dev/integration_tests/**/Pods
-/packages/flutter/coverage/
-version
-analysis_benchmark.json
+class Despesa {
+  String id;
+  String titulo;
+  double valor;
+  DateTime data;
 
-# packages file containing multi-root paths
-.packages.generated
+  Despesa({
+    required this.id,
+    required this.titulo,
+    required this.valor,
+    required this.data,
+  });
+}
 
-# Flutter/Dart/Pub related
-**/doc/api/
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-**/generated_plugin_registrant.dart
-.packages
-.pub-preload-cache/
-.pub/
-build/
-flutter_*.png
-linked_*.ds
-unlinked.ds
-unlinked_spec.ds
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
 
-# Android related
-**/android/**/gradle-wrapper.jar
-.gradle/
-**/android/captures/
-**/android/gradlew
-**/android/gradlew.bat
-**/android/local.properties
-**/android/**/GeneratedPluginRegistrant.java
-**/android/key.properties
-*.jks
+class _HomePageState extends State<HomePage> {
+  final List<Despesa> _despesas = [];
 
-# iOS/XCode related
-**/ios/**/*.mode1v3
-**/ios/**/*.mode2v3
-**/ios/**/*.moved-aside
-**/ios/**/*.pbxuser
-**/ios/**/*.perspectivev3
-**/ios/**/*sync/
-**/ios/**/.sconsign.dblite
-**/ios/**/.tags*
-**/ios/**/.vagrant/
-**/ios/**/DerivedData/
-**/ios/**/Icon?
-**/ios/**/Pods/
-**/ios/**/.symlinks/
-**/ios/**/profile
-**/ios/**/xcuserdata
-**/ios/.generated/
-**/ios/Flutter/.last_build_id
-**/ios/Flutter/App.framework
-**/ios/Flutter/Flutter.framework
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Generated.xcconfig
-**/ios/Flutter/ephemeral
-**/ios/Flutter/app.flx
-**/ios/Flutter/app.zip
-**/ios/Flutter/flutter_assets/
-**/ios/Flutter/flutter_export_environment.sh
-**/ios/ServiceDefinitions.json
-**/ios/Runner/GeneratedPluginRegistrant.*
+  void _adicionarDespesa(String titulo, double valor, DateTime data) {
+    final novaDespesa = Despesa(
+      id: DateTime.now().toString(),
+      titulo: titulo,
+      valor: valor,
+      data: data,
+    );
 
-# macOS
-**/Flutter/ephemeral/
-**/Pods/
-**/macos/Flutter/GeneratedPluginRegistrant.swift
-**/macos/Flutter/ephemeral
-**/xcuserdata/
+    setState(() {
+      _despesas.add(novaDespesa);
+    });
+  }
 
-# Windows
-**/windows/flutter/generated_plugin_registrant.cc
-**/windows/flutter/generated_plugin_registrant.h
-**/windows/flutter/generated_plugins.cmake
+  void _removerDespesa(String id) {
+    setState(() {
+      _despesas.removeWhere((despesa) => despesa.id == id);
+    });
+  }
 
-# Linux
-**/linux/flutter/generated_plugin_registrant.cc
-**/linux/flutter/generated_plugin_registrant.h
-**/linux/flutter/generated_plugins.cmake
+  double get _total {
+    return _despesas.fold(0.0, (sum, item) => sum + item.valor);
+  }
 
-# Coverage
-coverage/
+  void _abrirFormulario(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) {
+        return FormularioDespesa(_adicionarDespesa);
+      },
+    );
+  }
 
-# Symbols
-app.*.symbols
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Controle de Despesas"),
+      ),
+      body: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(16),
+            color: Colors.green.shade100,
+            child: Text(
+              "Total gasto: R\$ ${_total.toStringAsFixed(2)}",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(
+            child: _despesas.isEmpty
+                ? Center(child: Text("Nenhuma despesa cadastrada"))
+                : ListView.builder(
+                    itemCount: _despesas.length,
+                    itemBuilder: (ctx, index) {
+                      final despesa = _despesas[index];
+                      return Card(
+                        margin: EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            child: Text(
+                              "R\$${despesa.valor.toStringAsFixed(0)}",
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          title: Text(despesa.titulo),
+                          subtitle: Text(
+                              "${despesa.data.day}/${despesa.data.month}/${despesa.data.year}"),
+                          trailing: IconButton(
+                            icon: Icon(Icons.delete, color: Colors.red),
+                            onPressed: () =>
+                                _removerDespesa(despesa.id),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () => _abrirFormulario(context),
+      ),
+    );
+  }
+}
 
-# Exceptions to above rules.
-!**/ios/**/default.mode1v3
-!**/ios/**/default.mode2v3
-!**/ios/**/default.pbxuser
-!**/ios/**/default.perspectivev3
-!/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
-!/dev/ci/**/Gemfile.lock
+class FormularioDespesa extends StatefulWidget {
+  final Function(String, double, DateTime) onSubmit;
+
+  FormularioDespesa(this.onSubmit);
+
+  @override
+  _FormularioDespesaState createState() => _FormularioDespesaState();
+}
+
+class _FormularioDespesaState extends State<FormularioDespesa> {
+  final _tituloController = TextEditingController();
+  final _valorController = TextEditingController();
+  DateTime _dataSelecionada = DateTime.now();
+
+  void _submit() {
+    final titulo = _tituloController.text;
+    final valor = double.tryParse(_valorController.text) ?? 0;
+
+    if (titulo.isEmpty || valor <= 0) {
+      return;
+    }
+
+    widget.onSubmit(titulo, valor, _dataSelecionada);
+
+    Navigator.of(context).pop();
+  }
+
+  void _selecionarData() async {
+    final dataEscolhida = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2023),
+      lastDate: DateTime.now(),
+    );
+
+    if (dataEscolhida != null) {
+      setState(() {
+        _dataSelecionada = dataEscolhida;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.all(10),
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            TextField(
+              controller: _tituloController,
+              decoration: InputDecoration(labelText: "Título"),
+            ),
+            TextField(
+              controller: _valorController,
+              decoration: InputDecoration(labelText: "Valor (R\$)"),
+              keyboardType: TextInputType.number,
+            ),
+            SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                      "Data: ${_dataSelecionada.day}/${_dataSelecionada.month}/${_dataSelecionada.year}"),
+                ),
+                TextButton(
+                  onPressed: _selecionarData,
+                  child: Text("Selecionar data"),
+                )
+              ],
+            ),
+            ElevatedButton(
+              onPressed: _submit,
+              child: Text("Adicionar Despesa"),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
